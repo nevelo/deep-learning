@@ -161,7 +161,7 @@ def alex_cnn(features, labels, mode):
     conv3a = tf.layers.conv2d(
         inputs=pool3a,
         filters=192,
-        kernel_size=(5,5),
+        kernel_size=(3,3),
         strides=(1,1),
         padding='same',
         data_format=data_format,
@@ -171,7 +171,7 @@ def alex_cnn(features, labels, mode):
     conv3b = tf.layers.conv2d(
         inputs=pool3b,
         filters=192,
-        kernel_size=(11,11),
+        kernel_size=(3,3),
         strides=(1,1),
         padding='same',
         data_format=data_format,
@@ -207,6 +207,52 @@ def alex_cnn(features, labels, mode):
 
     print(conv3a_concat)
     print(conv3b_concat)
+
+    conv4a = tf.layers.conv2d(
+        inputs=conv3a_concat,
+        filters=192,
+        kernel_size=(3,3),
+        strides=(1,1),
+        padding='same',
+        data_format=data_format,
+        activation=tf.nn.relu,
+        name='conv4a')
+
+    conv4b = tf.layers.conv2d(
+        inputs=conv3b_concat,
+        filters=192,
+        kernel_size=(3,3),
+        strides=(1,1),
+        padding='same',
+        data_format=data_format,
+        activation=tf.nn.relu,
+        name='conv4b')
+
+    print(conv4a)
+    print(conv4b)
+
+    conv5a = tf.layers.conv2d(
+        inputs=conv4a,
+        filters=128,
+        kernel_size=(3,3),
+        strides=(1,1),
+        padding='same',
+        data_format=data_format,
+        activation=tf.nn.relu,
+        name='conv5a')
+
+    conv5b = tf.layers.conv2d(
+        inputs=conv4b,
+        filters=128,
+        kernel_size=(3,3),
+        strides=(1,1),
+        padding='same',
+        data_format=data_format,
+        activation=tf.nn.relu,
+        name='conv5b')
+
+    print(conv5a)
+    print(conv5b)
 
 def main(unused_argv):
     num_rand_samples = 5
