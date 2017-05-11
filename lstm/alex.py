@@ -10,6 +10,7 @@ CHANNELS_FIRST = False
 # of 4 provides the 55x55 output as expected from the first convolution layer.
 INPUT_H = 227
 INPUT_W = 227
+num_classes = 1000
 
 def alex_cnn(features, labels, mode):
     if CHANNELS_FIRST:
@@ -326,6 +327,39 @@ def alex_cnn(features, labels, mode):
         name='classification')
 
     print(classification)
+
+    # Code for training.
+    training_op = None
+    loss = None
+    # We use the label to create a one-hot vector for training purposes, if we're using a mode (TRAIN or EVAL)
+    # in which the ground truth is known.
+    if mode != learn.ModeKeys.INFER: 
+        ground_truth = tf.one_hot(indices=labels, depth=num_classes)
+        ground_truth = tf.reshape(ground_truth, [-1, num_classes])
+        loss = tf.losses.softmax_cross_entropy(onehot_labels=ground_truth,
+                                       logits=classification)
+
+    if mode == learn.ModeKeys.TRAIN:
+        # The training operation attempts to optimize the loss using various algorithms. AlexNet requires
+        # stochastic gradient descent, a batch size of 128, momentum of 0.9, and a weight decay of 0.0005.
+        # Details of the weight decay function is in section 5 of the paper and impleneted in the function
+        # delay_func().
+        training_op = tf.contrib.layers.optimize_loss(
+            loss=loss, 
+            global_step=tf.contrib.framework.get_global_step(),
+            learning_rate=learning_rate,
+            optimizer="SGD",
+            learning_rate_decay_fn=decay_func)
+        summary = tf.summary.tensor_summary('loss', loss)
+    
+    predictions = {'classes': tf.argmax(input=class_prediction, axis=1), # the prediction
+                   'probabilties': tf.nn.softmax(class_prediction, name='softmax') }# predicted probabilities
+    
+    return model_fn_lib.ModelFnOps(
+        mode=mode, predictions=predictions, loss=loss, train_op=training_op)
+
+def decay_func(learning_rate, global_step):
+
 
 def main(unused_argv):
     num_rand_samples = 5
