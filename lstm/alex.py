@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow.contrib.learn as learn
 
 
-CHANNELS_FIRST = True
+CHANNELS_FIRST = False
 
 # The original AlexNet paper claims an image input size of 224x224 -- however, this image size does
 # not actually fit with the math! 227x227 with 'valid' convolution (i.e., no padding) and a stride
@@ -178,6 +178,9 @@ def alex_cnn(features, labels, mode):
         activation=tf.nn.relu,
         name='conv3b')
 
+    print(conv3a)
+    print(conv3b)
+
     conv3a_split1, conv3a_split2 = tf.split(
         value=conv3a, 
         num_or_size_splits=2, 
@@ -254,9 +257,79 @@ def alex_cnn(features, labels, mode):
     print(conv5a)
     print(conv5b)
 
+    pool6a = tf.layers.max_pooling2d(
+        inputs=conv5a,
+        pool_size=(3,3),
+        strides=(2,2),
+        padding='valid',
+        data_format=data_format,
+        name='pool6a')
+
+    pool6b = tf.layers.max_pooling2d(
+        inputs=conv5b,
+        pool_size=(3,3),
+        strides=(2,2),
+        padding='valid',
+        data_format=data_format,
+        name='pool6b')
+
+    print(pool6a)
+    print(pool6b)
+
+    pool6 = tf.concat(
+        values=[pool6a, pool6b], 
+        axis=(1 if CHANNELS_FIRST else 3),
+        name='pool6')
+
+    print(pool6)
+
+    pool6_flat = tf.reshape(pool6, [-1, 6*6*256], name='pool6_flat')
+
+    print(pool6_flat)
+
+    dense7 = tf.layers.dense(
+        inputs=pool6_flat, 
+        units=4096, 
+        activation=tf.nn.relu,
+        name='dense7')
+
+    print(dense7)
+
+    dropout7 = tf.layers.dropout(
+        inputs=dense7,
+        rate=0.5,
+        training= (True if mode is learn.ModeKeys.TRAIN else False),
+        name='dropout7')
+
+    print(dropout7)
+
+    dense8 = tf.layers.dense(
+        inputs=dropout7, 
+        units=4096, 
+        activation=tf.nn.relu,
+        name='dense8')
+
+    print(dense8)
+
+    dropout8 = tf.layers.dropout(
+        inputs=dense8,
+        rate=0.5,
+        training= (True if mode is learn.ModeKeys.TRAIN else False),
+        name='dropout8')
+
+    print(dropout8)
+
+    classification = tf.layers.dense(
+        inputs=dropout8, 
+        units=1000, 
+        activation=tf.nn.relu,
+        name='classification')
+
+    print(classification)
+
 def main(unused_argv):
     num_rand_samples = 5
-    rand_data = np.random.rand(num_rand_samples, 3, INPUT_H, INPUT_W)
+    rand_data = np.random.rand(num_rand_samples, 3, INPUT_H, INPUT_W) if CHANNELS_FIRST else np.random.rand(num_rand_samples, INPUT_H, INPUT_W, 3)
     rand_labels = np.random.randint(low=0, high=1000, size=5, dtype='uint16')
     alex_cnn(rand_data, rand_labels, learn.ModeKeys.TRAIN)
 
