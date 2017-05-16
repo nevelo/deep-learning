@@ -34,6 +34,7 @@ def organize_training_data(path_to_dataset):
     #Save the list to a file.
     f = open(path_to_dataset + '/' + 'image_list.dat', 'wb')
     cPickle.dump(path_list, f)
+    f.close()
 
 def crop_still_imgs(path_to_dataset):
     output_path = path_to_dataset + '/stills/'
@@ -72,8 +73,9 @@ def crop_still_imgs(path_to_dataset):
             'labels': labels,
             'poses': poses}
 
-    f = open(output_path + 'cropped')
+    f = open(output_path + 'cropped', 'wb')
     cPickle.dump(data, f)
+    f.close()
 
 def main(unused_argv):
     crop_still_imgs(PATH)
