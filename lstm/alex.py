@@ -11,6 +11,10 @@ CHANNELS_FIRST = False
 INPUT_H = 227
 INPUT_W = 227
 num_classes = 1000
+learning_rate=0.01
+weight_decay=0.0005
+momentum=0.9
+batch_size=128
 
 def alex_cnn(features, labels, mode):
     if CHANNELS_FIRST:
@@ -348,8 +352,7 @@ def alex_cnn(features, labels, mode):
             loss=loss, 
             global_step=tf.contrib.framework.get_global_step(),
             learning_rate=learning_rate,
-            optimizer="SGD",
-            learning_rate_decay_fn=decay_func)
+            optimizer="SGD")
         summary = tf.summary.tensor_summary('loss', loss)
     
     predictions = {'classes': tf.argmax(input=class_prediction, axis=1), # the prediction
@@ -359,6 +362,8 @@ def alex_cnn(features, labels, mode):
         mode=mode, predictions=predictions, loss=loss, train_op=training_op)
 
 def decay_func(learning_rate, global_step):
+    pass
+
 
 
 def main(unused_argv):
