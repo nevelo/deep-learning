@@ -110,7 +110,7 @@ def load_cifar10_data(type=learn.ModeKeys.TRAIN, randomize=False):
         data1 = unpickle('dataset/cifar-10-batches-py/data_batch_1')
         data2 = unpickle('dataset/cifar-10-batches-py/data_batch_2')
         data3 = unpickle('dataset/cifar-10-batches-py/data_batch_3')
-        data4 = unpickle('dataset/cifar-10-batches-py/data_batch_4')
+        data4 = unpickle('dataset/cifar-10-bastetches-py/data_batch_4')
         data5 = unpickle('dataset/cifar-10-batches-py/data_batch_5')
 
         data = np.concatenate(

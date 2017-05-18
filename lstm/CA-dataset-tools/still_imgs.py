@@ -12,11 +12,17 @@ from PIL import Image
 PATH='/mnt/data/datasets/collective-activity'
 
 def unpickle(file_name):
+    """
+    A wrapper for cPickle.load() which handles file opening.
+    """
     with open(file_name, 'rb') as fo:
         data = cPickle.load(fo)
     return data
 
 def get_dir_list(path_to_dataset):
+    """
+    Given a directory, returns a sorted list of its immediate subdirectories.
+    """
     files = os.listdir(path_to_dataset)
     dirs = []
     for entry in files:
@@ -27,6 +33,12 @@ def get_dir_list(path_to_dataset):
     return dirs
 
 def organize_training_data(path_to_dataset):
+    """
+    Creates a list of files in the every immediate subdirectory of the given folder.
+    Useful when data is sorted into subdirectories by classes.
+
+    TO DO: have it create a dictionary with classes AND labels.
+    """
     #Get list of directories within dataset path.
     dirs = get_dir_list(path_to_dataset)
     print(dirs)
@@ -46,6 +58,11 @@ def organize_training_data(path_to_dataset):
     f.close()
 
 def crop_still_imgs(path_to_dataset):
+    """
+    Creates a pickle-file containing every bounding box crop. The data is
+    also labeled with the information in the annotations file. Returns it
+    as a dict with the keys ('images', 'labels', 'poses').
+    """
     output_path = path_to_dataset + '/stills/'
     dirs = get_dir_list(path_to_dataset+'/raw')
     # For each directory:
@@ -96,6 +113,10 @@ def crop_still_imgs(path_to_dataset):
     f.close()
 
 def analyze_dataset(path_to_dataset):
+    """
+    Histograms the heights, widths and ratios of the cropped bounding box images.
+    Useful for determining a good size for the input images to be resized to.
+    """
     data = unpickle(path_to_dataset)
     widths = {}
     heights = {}
@@ -166,8 +187,11 @@ def idx_max(values):
     return values.index(max(values))
 
 def resize_cropped_imgs(path_to_dataset):
-    target_height = 260
-    target_width = 130
+    """
+    Resizes every cropped image to 259x131, preserves an almost 1:2 aspect ratio and provides round numbers for the AlexNet network
+    """
+    target_height = 259
+    target_width = 131
     data = unpickle(path_to_dataset+'cropped')
     img_res = []
     for img in tqdm(data['images']):
@@ -182,10 +206,39 @@ def resize_cropped_imgs(path_to_dataset):
     cPickle.dump(new_data, f)
     f.close()
 
+def label_count(data):
+    """ 
+    Determines the histogram of image labels in the dataset. 
+    """
+    label_counts = np.zeros(10)
+    for label in tqdm(data['labels']):
+        label_counts[label] += 1
+        if label < 1 or label > 8:
+            print(label)
+
+    class_labels = ['       x', 
+                    '      NA', 
+                    'crossing', 
+                    ' waiting', 
+                    'queueing', 
+                    ' walking', 
+                    ' talking', 
+                    ' dancing', 
+                    ' jogging', 
+                    '       x']
+
+    for i in range(len(label_counts)):
+        print(class_labels[i]),
+        print(": ")
+        print(int(label_counts[i]))
+
 def main(unused_argv):
     #crop_still_imgs(PATH)
     resize_cropped_imgs(PATH+'/stills/')
     #analyze_dataset(PATH+'/stills/cropped')
+
+    #data = unpickle(PATH+'/stills/resized')
+    #label_count(data)
     
 if __name__ == '__main__':
     main(0)

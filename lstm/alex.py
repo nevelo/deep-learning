@@ -1,27 +1,28 @@
 import tensorflow as tf
 import numpy as np
 import tensorflow.contrib.learn as learn
-
-
-CHANNELS_FIRST = False
+from tensorflow.contrib.learn.python.learn.estimators import model_fn as model_fn_lib
 
 # The original AlexNet paper claims an image input size of 224x224 -- however, this image size does
 # not actually fit with the math! 227x227 with 'valid' convolution (i.e., no padding) and a stride
 # of 4 provides the 55x55 output as expected from the first convolution layer.
-INPUT_H = 227
-INPUT_W = 227
+
+input_height = 227
+input_width = 227
+channels_first = False
 num_classes = 1000
+
 learning_rate=0.01
 weight_decay=0.0005
 momentum=0.9
 batch_size=128
 
-def alex_cnn(features, labels, mode):
-    if CHANNELS_FIRST:
-        input_data = tf.reshape(features, [-1, 3, INPUT_H, INPUT_W])
+def alex_cnn(features, labels, mode, num_classes, input_height=227, input_width=227, channels_first=False):
+    if channels_first:
+        input_data = tf.reshape(features, [-1, 3, input_height, input_width])
         data_format = 'channels_first'
     else:
-        input_data = tf.reshape(features, [-1, INPUT_H, INPUT_W, 3])
+        input_data = tf.reshape(features, [-1, input_height, input_width, 3])
         data_format = 'channels_last'
 
     input_layer = tf.to_float(input_data)
@@ -47,7 +48,7 @@ def alex_cnn(features, labels, mode):
     conv1a, conv1b = tf.split(
         value=conv1, 
         num_or_size_splits=2, 
-        axis=(1 if CHANNELS_FIRST else 3),
+        axis=(1 if channels_first else 3),
         name="split1")
 
     print(conv1a)
@@ -189,13 +190,13 @@ def alex_cnn(features, labels, mode):
     conv3a_split1, conv3a_split2 = tf.split(
         value=conv3a, 
         num_or_size_splits=2, 
-        axis=(1 if CHANNELS_FIRST else 3),
+        axis=(1 if channels_first else 3),
         name="split3a")
 
     conv3b_split1, conv3b_split2 = tf.split(
         value=conv3b, 
         num_or_size_splits=2, 
-        axis=(1 if CHANNELS_FIRST else 3),
+        axis=(1 if channels_first else 3),
         name="split3b")
 
     print(conv3a_split1)
@@ -205,12 +206,12 @@ def alex_cnn(features, labels, mode):
 
     conv3a_concat = tf.concat(
         values=[conv3a_split1, conv3b_split1], 
-        axis=(1 if CHANNELS_FIRST else 3),
+        axis=(1 if channels_first else 3),
         name='conv3a_concat')
 
     conv3b_concat = tf.concat(
         values=[conv3a_split2, conv3b_split2], 
-        axis=(1 if CHANNELS_FIRST else 3),
+        axis=(1 if channels_first else 3),
         name='conv3b_concat')
 
     print(conv3a_concat)
@@ -283,12 +284,16 @@ def alex_cnn(features, labels, mode):
 
     pool6 = tf.concat(
         values=[pool6a, pool6b], 
-        axis=(1 if CHANNELS_FIRST else 3),
+        axis=(1 if channels_first else 3),
         name='pool6')
 
     print(pool6)
-
-    pool6_flat = tf.reshape(pool6, [-1, 6*6*256], name='pool6_flat')
+    shape = pool6.get_shape().as_list()
+    shape[0] = 1
+    elements = [-1]
+    elements.append(reduce(lambda x, y: x*y, shape))
+    print(elements)
+    pool6_flat = tf.reshape(pool6, shape=elements, name='pool6_flat')
 
     print(pool6_flat)
 
@@ -326,7 +331,7 @@ def alex_cnn(features, labels, mode):
 
     classification = tf.layers.dense(
         inputs=dropout8, 
-        units=1000, 
+        units=num_classes, 
         activation=tf.nn.relu,
         name='classification')
 
@@ -355,8 +360,8 @@ def alex_cnn(features, labels, mode):
             optimizer="SGD")
         summary = tf.summary.tensor_summary('loss', loss)
     
-    predictions = {'classes': tf.argmax(input=class_prediction, axis=1), # the prediction
-                   'probabilties': tf.nn.softmax(class_prediction, name='softmax') }# predicted probabilities
+    predictions = {'classes': tf.argmax(input=classification, axis=1), # the prediction
+                   'probabilties': tf.nn.softmax(classification, name='softmax') }# predicted probabilities
     
     return model_fn_lib.ModelFnOps(
         mode=mode, predictions=predictions, loss=loss, train_op=training_op)
@@ -368,7 +373,7 @@ def decay_func(learning_rate, global_step):
 
 def main(unused_argv):
     num_rand_samples = 5
-    rand_data = np.random.rand(num_rand_samples, 3, INPUT_H, INPUT_W) if CHANNELS_FIRST else np.random.rand(num_rand_samples, INPUT_H, INPUT_W, 3)
+    rand_data = np.random.rand(num_rand_samples, 259, 131, 3)
     rand_labels = np.random.randint(low=0, high=1000, size=5, dtype='uint16')
     alex_cnn(rand_data, rand_labels, learn.ModeKeys.TRAIN)
 
