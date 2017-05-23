@@ -188,10 +188,10 @@ def idx_max(values):
 
 def resize_cropped_imgs(path_to_dataset):
     """
-    Resizes every cropped image to 259x131, preserves an almost 1:2 aspect ratio and provides round numbers for the AlexNet network
+    Resizes every cropped image to 131x67, preserves an almost 1:2 aspect ratio and provides round numbers for the AlexNet network
     """
-    target_height = 259
-    target_width = 131
+    target_height = 131
+    target_width = 67
     data = unpickle(path_to_dataset+'cropped')
     img_res = []
     for img in tqdm(data['images']):
@@ -200,7 +200,11 @@ def resize_cropped_imgs(path_to_dataset):
 
     new_data = {'images': img_res,
                 'labels': data['labels'],
-                'poses': data['poses']}
+                'poses': data['poses'],
+                'meta': {'height': target_height, 
+                         'width': target_width,
+                         'channels_first': False,
+                         'num_classes': 7 }}
 
     f = open(path_to_dataset + 'resized', 'wb')
     cPickle.dump(new_data, f)

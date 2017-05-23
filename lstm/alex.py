@@ -17,7 +17,7 @@ weight_decay=0.0005
 momentum=0.9
 batch_size=128
 
-def alex_cnn(features, labels, mode, num_classes, input_height=227, input_width=227, channels_first=False):
+def alex_cnn(features, labels, mode):
     if channels_first:
         input_data = tf.reshape(features, [-1, 3, input_height, input_width])
         data_format = 'channels_first'
@@ -315,7 +315,7 @@ def alex_cnn(features, labels, mode, num_classes, input_height=227, input_width=
 
     dense8 = tf.layers.dense(
         inputs=dropout7, 
-        units=4096, 
+        units=512, 
         activation=tf.nn.relu,
         name='dense8')
 
